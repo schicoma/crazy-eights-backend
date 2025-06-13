@@ -9,6 +9,7 @@ export class Game {
   private currentTurn: string | null;
   private suiteChanged: Suit | undefined
   private status: 'waiting' | 'playing' | 'finished';
+  private currentDrawPenalty: number = 0
 
   constructor(id: string) {
     this.id = id;
@@ -56,6 +57,20 @@ export class Game {
       const j = Math.floor(Math.random() * (i + 1));
       [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
     }
+
+    this.deck.unshift({ value: Value.KING, suit: Suit.SPADES })
+    this.deck.unshift({ value: Value.KING, suit: Suit.CLUBS })
+    this.deck.splice(8, 0, { value: Value.KING, suit: Suit.HEARTS })
+    this.deck.splice(8, 0, { value: Value.KING, suit: Suit.DIAMONDS })
+  }
+
+  private resetCenterPile(): void {
+    const topCard = this.centerPile.pop();
+    if (topCard) {
+      this.deck = [...this.centerPile];
+      this.centerPile = [topCard];
+      this.shuffleDeck();
+    }
   }
 
   private dealCards(): void {
@@ -100,7 +115,8 @@ export class Game {
       isMyTurn: this.currentTurn === playerId,
       opponentCardCount: this.hands[this.getOpponentId(playerId)].length,
       suiteChanged: this.suiteChanged,
-      status: this.status
+      status: this.status,
+      currentDrawPenalty: this.currentDrawPenalty
     };
   }
 
@@ -114,6 +130,20 @@ export class Game {
     };
 
     const topCard = this.centerPile[this.centerPile.length - 1];
+
+    if (this.currentDrawPenalty) {
+      if (card.value === Value.KING) {
+        this.centerPile.push(card);
+        this.removeCardFromPlayersHand(playerId, card)
+        this.currentTurn = this.getOpponentId(playerId);
+
+        this.currentDrawPenalty += 3
+
+        return true
+      }
+
+      return false
+    }
 
     if (card.value === Value.EIGHT) {
       this.suiteChanged = suiteChanged
@@ -152,6 +182,8 @@ export class Game {
       this.removeCardFromPlayersHand(playerId, card)
       this.currentTurn = this.getOpponentId(playerId);
 
+      this.currentDrawPenalty += 3
+
       return true
     }
 
@@ -164,20 +196,37 @@ export class Game {
 
   }
 
-  drawCard(playerId: string): Card | undefined {
+  drawCard(playerId: string): Card[] {
     if (this.deck.length === 0) {
-      const topCard = this.centerPile.pop();
-      if (topCard) {
-        this.deck = [...this.centerPile];
-        this.centerPile = [topCard];
-        this.shuffleDeck();
-      }
+      this.resetCenterPile()
     }
+
+    if (this.currentDrawPenalty) {
+      return this.drawPenaltyCards(playerId)
+    }
+
     const card = this.deck.splice(0, 1)[0];
     if (card) {
       this.hands[playerId].push(card);
     }
-    return card;
+    return [card];
+  }
+
+  drawPenaltyCards(playerId: string): Card[] {
+    const remainingCards = this.deck.length - this.currentDrawPenalty
+
+    let penalty = this.deck.splice(0, Math.min(this.deck.length, this.currentDrawPenalty))
+
+    if (remainingCards < 0) {
+      this.resetCenterPile()
+
+      penalty = [...penalty, ...this.deck.splice(0, remainingCards)]
+    }
+
+    this.hands[playerId].push(...penalty)
+    this.currentDrawPenalty = 0
+
+    return penalty
   }
 
   pass(playerId: string) {
@@ -189,7 +238,12 @@ export class Game {
   }
 
   printLogs() {
-
-    console.log(this.centerPile, this.hands, this.deck)
+    console.log({
+      centerPileLimit9: this.centerPile.length > 9 ? this.centerPile.slice(Math.max(this.centerPile.length - 9, 1)) : this.centerPile,
+      centerPileCount: this.centerPile.length,
+      hands: this.hands,
+      deckCount: this.deck.length,
+      deckLimit9: this.deck.length > 9 ? this.deck.slice(0, 9) : this.deck,
+    })
   }
 } 

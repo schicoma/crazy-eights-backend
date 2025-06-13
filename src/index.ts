@@ -83,8 +83,8 @@ io.on('connection', (socket) => {
     if (!game) {
       return
     }
-    const card = game.drawCard(socket.id);
-    if (!card) {
+    const cards = game.drawCard(socket.id);
+    if (!cards.length) {
       return
     }
     // Update both players

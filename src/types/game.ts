@@ -33,4 +33,5 @@ export interface GameState {
   isMyTurn: boolean
   status: string
   suiteChanged?: Suit
+  currentDrawPenalty: number
 } 
