@@ -151,6 +151,8 @@ export class Game {
       this.centerPile.push(card);
       this.removeCardFromPlayersHand(playerId, card)
       this.currentTurn = this.getOpponentId(playerId);
+
+      return true
     }
 
     this.centerPile.push(card);
@@ -159,6 +161,7 @@ export class Game {
     this.checkIfPlayerHasWon(playerId)
 
     return true;
+
   }
 
   drawCard(playerId: string): Card | undefined {
@@ -183,5 +186,10 @@ export class Game {
     };
 
     this.currentTurn = this.getOpponentId(playerId);
+  }
+
+  printLogs() {
+
+    console.log(this.centerPile, this.hands, this.deck)
   }
 } 

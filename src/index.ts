@@ -66,6 +66,7 @@ io.on('connection', (socket) => {
   socket.on('playCard', ({ gameId, card, suiteChanged }: { gameId: string, card: Card, suiteChanged?: Suit }) => {
     const game = games[gameId];
     if (game && game.playCard(socket.id, card, suiteChanged)) {
+      game.printLogs()
       // Update both players
       game.getPlayers().forEach(playerId => {
         io.to(playerId).emit('updateGameState', {
