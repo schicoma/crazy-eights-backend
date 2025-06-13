@@ -8,7 +8,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:4200",
+    // just for test purposes
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
