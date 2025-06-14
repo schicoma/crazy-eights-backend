@@ -58,10 +58,10 @@ export class Game {
       [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
     }
 
-    this.deck.unshift({ value: Value.KING, suit: Suit.SPADES })
-    this.deck.unshift({ value: Value.KING, suit: Suit.CLUBS })
-    this.deck.splice(8, 0, { value: Value.KING, suit: Suit.HEARTS })
-    this.deck.splice(8, 0, { value: Value.KING, suit: Suit.DIAMONDS })
+    // this.deck.unshift({ value: Value.KING, suit: Suit.SPADES })
+    // this.deck.unshift({ value: Value.KING, suit: Suit.CLUBS })
+    // this.deck.splice(8, 0, { value: Value.KING, suit: Suit.HEARTS })
+    // this.deck.splice(8, 0, { value: Value.KING, suit: Suit.DIAMONDS })
   }
 
   private resetCenterPile(): void {
