@@ -11,13 +11,16 @@ export class Game {
   private status: 'waiting' | 'playing' | 'finished';
   private currentDrawPenalty: number = 0
 
-  constructor(id: string) {
+  constructor(id: string);
+  constructor(id: string, players: string[], hands: { [key: string]: Card[] }, centerPile: Card[], currentTurn: string);
+
+  constructor(id: string, players?: string[], hands?: { [key: string]: Card[] }, centerPile?: Card[], currentTurn?: string) {
     this.id = id;
-    this.players = [];
+    this.players = players || [];
     this.deck = [];
-    this.hands = {};
-    this.centerPile = [];
-    this.currentTurn = null;
+    this.hands = hands || {};
+    this.centerPile = centerPile || [];
+    this.currentTurn = currentTurn || null;
     this.status = 'waiting';
   }
 
@@ -100,12 +103,21 @@ export class Game {
     this.hands[playerId].splice(index, 1)
   }
 
-  private checkIfPlayerHasWon(playerId: string) {
-    if (this.hands[playerId].length) {
+  private checkIfPlayerHasWon(playerId: string, card?: Card) {
+    if (card?.value === Value.KING) {
+      // if the other player does not have another KING, the player with the KING wins
+
+      const opponentHand = this.hands[this.getOpponentId(playerId)]
+      if (opponentHand.filter((card) => card.value === Value.KING).length === 0 && !this.hands[playerId].length) {
+        this.status = 'finished'
+      }
+
       return
     }
 
-    this.status = 'finished'
+    if (!this.hands[playerId].length) {
+      this.status = 'finished'
+    }
   }
 
   getGameStateForPlayer(playerId: string): GameState {
@@ -181,6 +193,7 @@ export class Game {
       this.centerPile.push(card);
       this.removeCardFromPlayersHand(playerId, card)
       this.currentTurn = this.getOpponentId(playerId);
+      this.checkIfPlayerHasWon(playerId, card)
 
       this.currentDrawPenalty += 3
 

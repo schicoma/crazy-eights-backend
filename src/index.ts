@@ -14,11 +14,31 @@ const io = new Server(httpServer, {
   }
 });
 
+app.use(express.json());
+
+// create and endpoint
+app.post('/api/game/:gameId/send-notification', (req, res) => {
+  const { gameId } = req.params;
+  console.log(req.params, req.body)
+  const { message } = req.body;
+
+
+  const game = games[gameId];
+  if (!game) {
+    res.status(404).json({ message: 'Game not found' });
+  }
+
+  game.getPlayers().forEach(playerId => {
+    io.to(gameId).emit('notitifications', { message });
+  });
+
+  res.status(200).json({ message: 'Notification sent' });
+
+});
+
 const games: { [key: string]: Game } = {};
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
   socket.on('createGame', () => {
     const gameId = Math.random().toString(36).substring(2, 8);
     const game = new Game(gameId);
@@ -118,7 +138,6 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
     // Clean up games where this player was participating
     Object.entries(games).forEach(([gameId, game]) => {
       if (game.getPlayers().includes(socket.id)) {
